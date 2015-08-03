@@ -2,6 +2,8 @@
 \title{Change Log for iNZight}
 \encoding{UTF-8}
 
+# [NEW FEATURES] Added the iNZightMaps module
+
 \section{Changes in version 2.3}{
   RELEASE DATE: 04 August 2015
   \subsection{NEW FEATURES}{
