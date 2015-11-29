@@ -10,18 +10,18 @@ iNZGUI <- setRefClass(
                    ## list of iNZDocuments (contain data, plotSettings)
                    iNZDocuments = "list",
                    ## the active document of the iNZDocuments list
-                   activeDoc = "numeric", 
+                   activeDoc = "numeric",
                    ## the main GUI window
                    win = "ANY",
                    menubar = "ANY",
-                   
+
                    ## left group
                    leftMain = "ANY",
                    moduleWindow = "ANY",
                    gp1 = "ANY",
                    ## right group
                    gp2 = "ANY",
-                   
+
                    ## the Widget containing the 2 data views
                    dataViewWidget = "ANY",
                    ## the widget handling the switching between the
@@ -67,16 +67,16 @@ iNZGUI <- setRefClass(
             ## We must set the correct directory if using a Mac
             if (is_MacOSX())
                 try(setwd(Sys.getenv("R_DIR")), TRUE)
-            
+
             ## Grab settings file (or try to!)
             getPreferences()
-            
+
             ## Check for updates ... need to use try incase it fails (no connection etc)
             ## RCurl no longer supports R < 3, so it wont be available on Mac SL version.
             if ("RCurl" %in% row.names(installed.packages())) {
                 connected <- RCurl::url.exists("docker.stat.auckland.ac.nz")
             } else connected <- FALSE
-            
+
             if (connected) {
                 if (preferences$track == "ask") {
                     preferences$track <<-
@@ -84,7 +84,7 @@ iNZGUI <- setRefClass(
                                  title = "Share usage information?", icon = "question")
                     savePreferences()
                 }
-                
+
                 if (preferences$check.updates) {
                     ap <- suppressWarnings(try(numeric_version(available.packages(
                         contriburl = contrib.url("http://docker.stat.auckland.ac.nz/R",
@@ -99,9 +99,9 @@ iNZGUI <- setRefClass(
                         }
                     }
                 }
-                
-                
-                
+
+
+
                 ## also want to be cheeky and add users to "database" of users so we can track...
                 if (preferences$track) {
                     try({
@@ -109,20 +109,20 @@ iNZGUI <- setRefClass(
                         os <- "Linux"
                         if (.Platform$OS == "windows") {
                             os = "Windows"
-                        } else if (Sys.info()["sysname"] == "Darwin") { 
+                        } else if (Sys.info()["sysname"] == "Darwin") {
                             os = "Mac OS X"
                             osx.version <- try(system("sw_vers -productVersion", intern = TRUE), silent = TRUE)
                             if (!inherits(osx.version, "try-error")) {
                                 os = paste("Mac OS X", osx.version)
                             }
                         }
-                        
-                        
+
+
                         ## have they updated before?
                         if (is.null(preferences$track.id)) {
                             ## compatibility mode ---
                             hash.id <- "new"
-                            
+
                             if (os == "Windows") {
                                 libp <- "prog_files"
                             } else if (os != "Linux") {
@@ -133,22 +133,22 @@ iNZGUI <- setRefClass(
                                 libp <- .libPaths()[which(sapply(.libPaths(), function(p)
                                                                  "iNZight" %in% list.files(p)))[1]]
                             }
-                            
+
                             if (file.exists(file.path(libp, "id.txt"))) {
                                 hash.id <- readLines(file.path(libp, "id.txt"))
                                 unlink(file.path(libp, "id.txt"))  ## delete the old one
                             }
-                            
+
                             ## only if not already tracking
                             if (hash.id == "new") {
                                 track.url <- paste0("http://docker.stat.auckland.ac.nz/R/tracker/index.php?track&v=",
                                                     version, "&os=", gsub(" ", "%20", os), "&hash=", hash.id)
                                 f <- try(url(track.url,  open = "r"), TRUE)
-                                
+
                                 ## write the hash code to their installation:
                                 hash.id <- readLines(f)
-                                
-                                
+
+
                                 ## try(writeLines(hash.id, file.path(libp, "id.txt")), silent = TRUE)
                             }
 
@@ -162,23 +162,23 @@ iNZGUI <- setRefClass(
                     })
                 }
             }
-                
-            win <<- gwindow(win.title, visible = FALSE, 
+
+            win <<- gwindow(win.title, visible = FALSE,
                             width = preferences$window.size[1], height = preferences$window.size[2])
-            
+
             gtop <- ggroup(horizontal = FALSE, container = win,
                            use.scrollwindow = TRUE)
             menugrp <- ggroup(container = gtop)
             initializeMenu(menugrp, disposeR)
             g <- gpanedgroup(container = gtop, expand = TRUE)
-            
+
             ## Left side group
             leftMain <<- ggroup(container = g)
             size(leftMain) <<- c(300, -1)
-            
+
             gp1 <<- gvbox(container = leftMain,
                            expand = TRUE)
-            
+
             ## Right side group
             gp2 <<- ggroup(horizontal = FALSE, container = g, expand = F)
             ## set up widgets in the left group
@@ -212,7 +212,7 @@ iNZGUI <- setRefClass(
             plotWidget$addPlot()
             ## add what is done upon closing the gui
             closerHandler(disposeR)
-            
+
 #            add(g, leftMain)
 #            add(g, gp2)
         },
@@ -336,7 +336,7 @@ iNZGUI <- setRefClass(
                         ## setup  = modSetup(module)
                         ## if (setup) {
                         ##     if (emptyData()) {
-                        ##         ## if there is no imported 
+                        ##         ## if there is no imported
                         ##         ## dataset, display a gmessage
                         ##         displayMsg("time series")
                         ##         return()
@@ -441,7 +441,7 @@ iNZGUI <- setRefClass(
                   label = "Sort data by variables...",
                   icon = "symbol_diamond",
                   handler = function(h, ...){
-                    iNZSortbyDataWin$new(.self) 
+                    iNZSortbyDataWin$new(.self)
                   }
                 ),
                 agraData = gaction(
@@ -599,17 +599,17 @@ iNZGUI <- setRefClass(
                         browseURL("https://www.stat.auckland.ac.nz/~wild/iNZight/user_guides/plot_options/")
                     }
                 ),
-                guideManipulateVariables = gaction(
+                guideVariables = gaction(
                     ## 42
-                    label = "Manipulate Variables Menu",
+                    label = "Variables Menu",
                     icon = "symbol_diamond",
                     handler = function(h, ...) {
-                        browseURL("https://www.stat.auckland.ac.nz/~wild/iNZight/user_guides/manipulate_variables/")
+                        browseURL("https://www.stat.auckland.ac.nz/~wild/iNZight/user_guides/variables/")
                     }
                 ),
                 guideDataOptions = gaction(
                     ## 43
-                    label = "Data Menu",
+                    label = "Dataset Menu",
                     icon = "symbol_diamond",
                     handler = function(h, ...) {
                         browseURL("https://www.stat.auckland.ac.nz/~wild/iNZight/user_guides/data_options/")
@@ -741,7 +741,7 @@ iNZGUI <- setRefClass(
         initializeDataNameWidget = function() {
             ## create the widget
             dataNameWidget <<- iNZDataNameWidget$new(.self)
-            
+
              ## if the list of active document changes, update the data set name
             addActDocObs(function() {
                 dataNameWidget$updateWidget()
@@ -782,17 +782,17 @@ iNZGUI <- setRefClass(
             ctrlWidget <<- iNZControlWidget$new(.self)
 
             ## if the list of active document changes, update the data view
-            ## addActDocObs(
-            ##     function() {
-            ##         ctrlWidget$updateVariables()       
-            ##     }
-            ## )
-            ## ## if the dataSet changes, update the variable View
-            ## getActiveDoc()$addDataObserver(
-            ##     function() {
-            ##         ctrlWidget$updateVariables()
-            ##     }
-            ## )
+            addActDocObs(
+                function() {
+                    ctrlWidget$updateVariables()
+                }
+            )
+            ## if the dataSet changes, update the variable View
+            getActiveDoc()$addDataObserver(
+                function() {
+                    ctrlWidget$updateVariables()
+                }
+            )
 
             .self$ctrlWidget
         },
@@ -812,6 +812,13 @@ iNZGUI <- setRefClass(
                             v <- curSet$varnames
                             curSet$varnames$x <- v$y
                             curSet$varnames$y <- v$x
+                        }
+
+                        ## Design or data?
+                        curMod <- getActiveDoc()$getModel()
+                        if (!is.null(curMod$dataDesign)) {
+                            curSet$data <- NULL
+                            curSet$design <- curMod$createSurveyObject()
                         }
 
                         w <- gwindow("Summary", width = 850, height = 400,
@@ -840,6 +847,13 @@ iNZGUI <- setRefClass(
                             v <- curSet$varnames
                             curSet$varnames$x <- v$y
                             curSet$varnames$y <- v$x
+                        }
+
+                        ## Design or data?
+                        curMod <- getActiveDoc()$getModel()
+                        if (!is.null(curMod$dataDesign)) {
+                            curSet$data <- NULL
+                            curSet$design <- curMod$createSurveyObject()
                         }
 
                         w <- gwindow("Choose Method", width = 100,
@@ -872,7 +886,7 @@ iNZGUI <- setRefClass(
                                                 font.attr = list(family = "monospace"))
                                 visible(wBoots) <- TRUE
                             }
-                            
+
                             w2 <- gwindow(infTitle, width = 850, height = 400,
                                           visible = FALSE, parent = win)
                             g2 <- gtext(
@@ -950,10 +964,16 @@ iNZGUI <- setRefClass(
                     curPlSet$data <- NULL
                     curPlSet$design <- curMod$createSurveyObject()
                 }
-                
+
+                ## "swap" the behaviour around
+                curPlSet$internal.labels <- !curPlSet$internal.labels
+
                 ## Suppress the warnings produced by iNZightPlot ...
                 suppressWarnings({
                     curPlot <<- unclass(do.call(iNZightPlot, curPlSet))
+                    if (!is.null(attr(curPlot, "dotplot.redraw")))
+                        if (attr(curPlot, "dotplot.redraw"))
+                            curPlot <<- unclass(do.call(iNZightPlot, curPlSet))
                 })
                 plotType <<- attr(curPlot, "plottype")
             } else {
@@ -976,6 +996,9 @@ iNZGUI <- setRefClass(
                 function() {
                     dataViewWidget$updateWidget()
                     getActiveDoc()$updateSettings()
+
+                    ## Also, update list of variables in drop-downs:
+                    ctrlWidget$updateVariables()
                 }
                 )
             ## if plotSettings change, update the plot
@@ -994,7 +1017,7 @@ iNZGUI <- setRefClass(
         addActDocObs = function(FUN, ...) {
             .self$activeDocChanged$connect(FUN, ...)
         },
-        
+
         ## check for any imported data
         emptyData = function() {
             vars = names(.self$getActiveData())
@@ -1004,14 +1027,14 @@ iNZGUI <- setRefClass(
                 return(FALSE)
             }
         },
-        
+
         ## display warning message
         displayMsg = function(label) {
             gmessage(msg = paste("A dataset is required to use the",
                                  label, "module"),
                      title = "No data", icon = "error")
         },
-        
+
         ## module setup
         modSetup = function(mod) {
             if (mod %in% rownames(installed.packages())) {
@@ -1025,7 +1048,7 @@ iNZGUI <- setRefClass(
                 return(install)
             }
         },
-        
+
         ## create a gvbox object into the module window (ie, initialize it)
         ## NOTE: should be run every time when a new module is open
         initializeModuleWindow = function() {
@@ -1045,7 +1068,7 @@ iNZGUI <- setRefClass(
             ## Only keep allowed preferences --- anything else is discarded
             prefs <- prefs[names(prefs) %in% allowed.names]
             defs <- defaultPrefs()
-            
+
             ## TRACK = TRUE | FALSE | "ask"
             prefs$track <-
                 if (is.null(prefs$track)) defs$track
@@ -1055,7 +1078,7 @@ iNZGUI <- setRefClass(
 
 
             ## check.updates = TRUE | FALSE
-            prefs$check.updates <- 
+            prefs$check.updates <-
                 if (is.null(prefs$check.updates)) defs$check.updates
                 else if (!is.na(prefs$check.updates) & is.logical(prefs$check.updates)) prefs$check.updates
                 else defs$check.updates
@@ -1069,7 +1092,7 @@ iNZGUI <- setRefClass(
 
 
             prefs
-            
+
         },
         getPreferences = function() {
             tt <- try({
@@ -1082,7 +1105,7 @@ iNZGUI <- setRefClass(
                         defaultPrefs()
                     }
             }, TRUE)
-            
+
             if (inherits(tt, "try-error"))
                 preferences <<- defaultPrefs()
         },
